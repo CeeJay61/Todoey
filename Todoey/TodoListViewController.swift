@@ -12,7 +12,7 @@ class TodoListViewController: UITableViewController {
     // By choosing to use a subclass of UITableViewController - a lot of the code is prewritten for the table view so no delegation is required.
     
     
-    let itemArray = ["Find Mike", "Buy eggos", "Destroy Demogorgon"]
+    var itemArray = ["Find Mike", "Buy eggos", "Destroy Demogorgon"]
     
     
     override func viewDidLoad() {
@@ -38,7 +38,7 @@ class TodoListViewController: UITableViewController {
         cell.textLabel?.text = itemArray[indexPath.row]
         
         return cell
-    }
+    } // *** tableView - cellForRowAt ***
 
     
     //MARK - TableView Delegate Methods
@@ -60,7 +60,44 @@ class TodoListViewController: UITableViewController {
         // Deselect row after clicking - removing the highlight
         tableView.deselectRow(at: indexPath, animated: true)
     
-    }
+    } // *** tableView - didSelectRowAt ***
+    
+    //Mark - Add New Items
+    
+    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
+        
+        // Create a local variable to hold the textfield message outside of the closures below
+        var textField = UITextField()
+        
+        // Create an alert to add item
+        let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
+        
+        let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
+            
+            // what will happen once the user clicks the Add Item button on our UIAlert
+            
+            // Append the new item to ItemArray
+            self.itemArray.append(textField.text!)
+            // Reload the data in the table to show the appended item
+            self.tableView.reloadData()
+            
+        } // *** UIAlertAction ***
+        
+        // Add a text field to the alert
+        alert.addTextField { (alertTextField) in
+            // Put a placeholder text in the textfield
+            alertTextField.placeholder = "Create new item"
+            textField = alertTextField
+        } // *** alert.addTextField ***
+        
+        // Perform the alert action
+        alert.addAction(action)
+        
+        // Present the alert
+        present(alert, animated: true, completion: nil)
+        
+    } // *** addButtonPressed ***
+    
     
 
 } // *** TodoListViewController ***
