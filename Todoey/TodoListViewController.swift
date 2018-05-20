@@ -14,10 +14,19 @@ class TodoListViewController: UITableViewController {
     
     var itemArray = ["Find Mike", "Buy eggos", "Destroy Demogorgon"]
     
+    // create defaults for persistent data storage
+    let defaults = UserDefaults.standard
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        // load the table with the contents of the itemArray list stored in the plist.
+        // check to ensure it is not empty
+        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+            itemArray = items
+        } // *** if let ***
+        
     } // *** viewDidLoad ***
     
 
@@ -78,6 +87,10 @@ class TodoListViewController: UITableViewController {
             
             // Append the new item to ItemArray
             self.itemArray.append(textField.text!)
+            
+            // save the itemArray to the defaults
+            self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            
             // Reload the data in the table to show the appended item
             self.tableView.reloadData()
             
