@@ -11,33 +11,29 @@ import UIKit
 class TodoListViewController: UITableViewController {
     // By choosing to use a subclass of UITableViewController - a lot of the code is prewritten for the table view so no delegation is required.
     
+    // constant for the filepath to the documents folder
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     var itemArray = [Item]()
     
     // create defaults for persistent data storage
-    let defaults = UserDefaults.standard
+    // let defaults = UserDefaults.standard  // commented out as the method for persisting data will change
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let newItem1 = Item()
-        newItem1.title = "Find Mike"
-        itemArray.append(newItem1)
         
-        let newItem2 = Item()
-        newItem2.title = "Buy eggos"
-        itemArray.append(newItem2)
+        print(dataFilePath)
         
-        let newItem3 = Item()
-        newItem3.title = "Destroy Demogorgon"
-        itemArray.append(newItem3)
+      
+        loadItems()
         
         // load the table with the contents of the itemArray list stored in the plist.
         // check to ensure it is not empty
-        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
-            itemArray = items
-        } // *** if let ***
+//        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
+//            itemArray = items
+//        } // *** if let ***
         
     } // *** viewDidLoad ***
     
@@ -86,11 +82,13 @@ class TodoListViewController: UITableViewController {
         // Check to see if the current cell is checked or not and reverse the status
         itemArray [indexPath.row].done = !itemArray[indexPath.row].done
         
-        // refresh the tableview
-        tableView.reloadData()
+        // save the items to the array after toggling the checkmark
+        self.saveItems()
     
         // Deselect row after clicking - removing the highlight
         tableView.deselectRow(at: indexPath, animated: true)
+        
+        
     
     } // *** tableView - didSelectRowAt ***
     
@@ -115,11 +113,8 @@ class TodoListViewController: UITableViewController {
             // Append the new item to ItemArray
             self.itemArray.append(newItem)
             
-            // save the itemArray to the defaults
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
-            
-            // Reload the data in the table to show the appended item
-            self.tableView.reloadData()
+            // save the new items to the array
+            self.saveItems()
             
         } // *** UIAlertAction ***
         
@@ -138,6 +133,46 @@ class TodoListViewController: UITableViewController {
         
     } // *** addButtonPressed ***
     
+   
+    //Mark - Model Manupulation Methods
+    // this saves and deletes data from the database
+    
+    func saveItems() {
+        // save the itemArray to the defaults
+        // self.defaults.set(self.itemArray, forKey: "TodoListArray") // commented out as the data persistance method is changing from defaults to NSCoder
+        let encoder = PropertyListEncoder()
+        
+        do {
+            // initialize the encoder object with the itemArray array
+            let data = try encoder.encode(itemArray)
+            // write the data to the data plist
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding item array: \(error)")
+        } // *** do ... catch ***
+        
+        // Reload the data in the table to show the appended item
+        self.tableView.reloadData()
+        
+    } // *** saveItems() ***
+    
+    
+    func loadItems() {
+        
+        // this function is to load the items from the database to the view
+        // call the data if there is any there
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            // create a decoder to retrieve the data
+            let decoder = PropertyListDecoder()
+            
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error decoding item array: \(error)")
+            } // *** do ... catch ***
+        } // *** if let data ***
+        
+    } // *** loadItems() ***
     
 
 } // *** TodoListViewController ***

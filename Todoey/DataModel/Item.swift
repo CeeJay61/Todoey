@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Item {
+class Item: Codable {
    
     // set the properties for the data in the list
     var title = ""
