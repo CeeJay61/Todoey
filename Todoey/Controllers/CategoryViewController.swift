@@ -7,15 +7,16 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryViewController: UITableViewController {
     
-    // create an array to hold the categories
-    var categories = [Category]()
+    // initialization realm
+    let realm = try! Realm()
     
-    // create a singleton to initiate the database
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    // create an array to hold the categories
+    var categories: Results<Category>?
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,7 +31,11 @@ class CategoryViewController: UITableViewController {
     
     // Number of Rows
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories.count
+        
+        // return the number of rows of categories.  Category is an optional value. If the count is nil, the
+        // nil coalescing operator (??) is used to return the value specified after the ??
+        return categories?.count ?? 1
+        
     } // *** tableView - numberOfRowsInSection ***
     
     // Choose the data at the selected row
@@ -40,10 +45,11 @@ class CategoryViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         
         // Set the text label
-        cell.textLabel?.text = categories[indexPath.row].name
+        cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories added yet!"
         
         // return the cell
         return cell
+        
         } // *** tableView - cellForRowAt ***
     
 
@@ -60,7 +66,7 @@ class CategoryViewController: UITableViewController {
             let destinationVC = segue.destination as! TodoListViewController
             
             if let indexPath = tableView.indexPathForSelectedRow {
-                destinationVC.selectedCategory = categories[indexPath.row]
+                destinationVC.selectedCategory = categories?[indexPath.row]
                 
             } // *** if let ***
             
@@ -72,11 +78,13 @@ class CategoryViewController: UITableViewController {
 //Mark: - Data Manipulation Methods
     
     // this saves and deletes data from the database
-    func saveCategories() {
+    func save(category: Category) {
         
         // save the categoryArray to the defaults
         do {
-            try context.save()
+            try realm.write {
+                realm.add(category)
+            } // *** realm.write ***
         } catch {
             print("Error saving category: \(error)")
         } // *** do ... catch ***
@@ -87,17 +95,10 @@ class CategoryViewController: UITableViewController {
     } // *** saveCategory() ***
     
     
-    func loadCategories(with request: NSFetchRequest<Category> = Category.fetchRequest()) {
+    func loadCategories() {
         
-        // this function is to load the categories from the database to the view
-        // call the data if there is any there
-        let request: NSFetchRequest<Category> = Category.fetchRequest()
-        
-        do {
-            categories = try context.fetch(request)
-        } catch {
-            print("Error loading categories \(error)")
-        } // *** do ... catch ***
+        // call all of the objects of type Category
+        categories = realm.objects(Category.self)
         
         // reload the database
         tableView.reloadData()
@@ -118,14 +119,12 @@ class CategoryViewController: UITableViewController {
             
             // what will happen once the user clicks the Add Item button on our UIAlert
             // create a new item object
-            let newCategory = Category(context: self.context)
+            let newCategory = Category()
             newCategory.name = textField.text!
-            
-            // Append the new item to ItemArray
-            self.categories.append(newCategory)
+         
             
             // save the new items to the array
-            self.saveCategories()
+            self.save(category: newCategory)
             
         } // *** UIAlertAction ***
         
